@@ -6,5 +6,6 @@ export default defineConfig({
   plugins: [vue()],
   test: {
     environment: 'happy-dom',
+    globalSetup: './vitest.global-setup.ts',
   },
 })
