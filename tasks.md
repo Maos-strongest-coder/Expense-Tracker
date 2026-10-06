@@ -24,27 +24,42 @@ where validation lives, edge cases) and wait for OK before coding.
 ## Phase 1 — Types + pure utils
 - [ ] 1.1 `src/categories.ts`: `enum Category { Food = 'food', Transport = 'transport', Entertainment = 'entertainment', Other = 'other' }`
       plus `CATEGORIES: readonly { id: Category; label: string; color: string }[]` — one entry per member,
-      labels Food/Transport/Entertainment/Other.
-      Done when: a spec asserts the 4 enum values in order and that every `Category` member has exactly one `CATEGORIES` entry.
-- [ ] 1.2 `src/types.ts`: Expense, ExpenseInput, FormErrors, SortField, SortOrder, CategoryFilter, FilterOptions,
+      labels Food/Transport/Entertainment/Other; also `isCategory(v: unknown): v is Category`.
+      Done when: a spec asserts the 4 enum values in order, that every `Category` member has exactly one `CATEGORIES` entry,
+      and that `isCategory` accepts each member and rejects everything else (validation and storage parsing both use it).
+- [ ] 1.2 `src/types.ts`: Expense, ExpenseInput, ExpenseDraft, FormErrors, SortField, SortOrder, CategoryFilter, FilterOptions,
       CategorySummary, StoredPayload — `import type` only (incl. `import type { Category } from './categories'`).
+      `ExpenseDraft { description: string; amount: string; category: Category | null; date: string }`;
+      `FormErrors = Partial<Record<keyof ExpenseDraft, string>>`;
+      `ValidationResult = { ok: true; value: ExpenseInput } | { ok: false; errors: FormErrors }`.
       Done when: typecheck green; no `any` anywhere (lint enforced).
-- [ ] 1.3 `utils/money.ts` — `parseAmountToCents`.
-      Done when: tests: `'12'→1200`, `'12,34'→1234`, `'12.34'→1234`, `'1.234,56'→123456`; errors for `''`, `'abc'`, `'0'`,
-      `'-5'`, 3 decimals, `'1000000.01'` (> cap), `'12.'`, `'1.234'` (lone-dot grouping is ambiguous).
-- [ ] 1.4 `utils/money.ts` — `formatCents` (nl-NL EUR; Intl inserts a non-breaking space after `€`).
-      Done when: tests: `0 → '€\u00a00,00'`, `1234 → '€\u00a012,34'`, `NaN/undefined → '€\u00a00,00'` (never empty) —
+- [ ] 1.3 `utils/money.ts` — `parseAmountToCents(raw: string): number | null`, syntax only: trims, accepts `12`, `12,34`, `12.34`,
+      `1.234,56`, optional leading `-`, max 2 decimals; builds cents from integer/fraction strings (never `parseFloat(...)*100`).
+      Range rules (> 0, ≤ 100000000) move to 1.6.
+      Done when: tests — valid: `'12'→1200`, `'12,34'→1234`, `'12.34'→1234`, `'1.234,56'→123456`, `' 12,34 '→1234`, `'0.29'→29`,
+      `'19.99'→1999`, `'1000000'→100000000`, `'-5'→-500`, `'0'→0`; null: `''`, `'abc'`, `'12.'`, `'1.234'`, `'1,234.56'`, 3 decimals.
+- [ ] 1.4 `utils/money.ts` — `formatCents(cents: number): string` with a module-level `Intl.NumberFormat` instance (nl-NL EUR;
+      Intl inserts a non-breaking space after `€`); non-finite → `'€\u00a00,00'`.
+      Done when: tests: `0 → '€\u00a00,00'`, `1234 → '€\u00a012,34'`, `NaN` and `Infinity → '€\u00a00,00'` (never empty) —
       compare against `'€\u00a0…'` strings (or normalize via a helper), never a normal space.
 - [ ] 1.5 `utils/dates.ts` — `todayLocalISO`, `isCalendarDate`, `isFutureDate`, min date 2000-01-01;
-      pin `TZ=Europe/Amsterdam` in the Vitest setup.
-      Done when: tests: `'2026-02-30'` invalid; clock set to `new Date(2026, 9, 7, 0, 30)` → `todayLocalISO()` returns
-      `'2026-10-07'` (the buggy `toISOString().slice(0,10)` would return the 6th); tomorrow future; `'1999-12-31'` below min.
-- [ ] 1.6 `utils/validation.ts` — `validateField` + `validateExpense`.
-      Done when: one test per AGENTS.md rule (description 2–120 trimmed, amount, category membership, date) + errors typed as `FormErrors`.
-- [ ] 1.7 `utils/sorting.ts` — `compareExpenses` + `sortExpenses`.
-      Done when: tests for date/amount × asc/desc (4 cases) + equal keys → `createdAt` asc tie-break.
-- [ ] 1.8 `utils/storage.ts` — `parseStoredPayload` (pure, no localStorage).
-      Done when: tests: corrupt JSON, `version≠1`, wrong shape → empty + `console.warn` spy; 1-of-3 invalid records → 2 kept; all-valid roundtrip.
+      pin `TZ=Europe/Amsterdam` via Vitest `globalSetup`.
+      Done when: tests: `new Date(2026, 9, 7).getTimezoneOffset() === -120`; `'2026-02-30'` invalid;
+      clock set to `new Date(2026, 9, 7, 0, 30)` → `todayLocalISO()` returns `'2026-10-07'`
+      (the buggy `toISOString().slice(0,10)` would return the 6th); tomorrow future; `'1999-12-31'` below min.
+- [ ] 1.6 `utils/validation.ts` — `validateExpense(draft: ExpenseDraft): ValidationResult` + `validateField`.
+      Amount messages: `''` → required; `null` from `parseAmountToCents` → valid amount, max 2 decimals;
+      ≤ 0 → greater than 0; > 100000000 → too large.
+      Done when: one test per message (amount, description 2–120 trimmed, category membership via `isCategory`, date) +
+      `ValidationResult` shape asserted.
+- [ ] 1.7 `utils/sorting.ts` — `compareExpenses` + `sortExpenses` (returns a new array via `[...list].sort`).
+      Done when: tests for date/amount × asc/desc (4 cases); dates compared as strings; input array unchanged;
+      tie-break = `createdAt` in the same direction as the primary sort, then `id`.
+- [ ] 1.8 `utils/storage.ts` — `parseStoredPayload(raw: string | null): { expenses: Expense[]; status: 'ok' | 'empty' | 'corrupt'; dropped: number }`
+      (pure, no localStorage, no console calls); `const data: unknown = JSON.parse(raw)` inside try/catch;
+      narrow with type guards (`isExpense`, `isCategory`), no `as` casts.
+      Done when: tests assert status/dropped — corrupt JSON, `version≠1`, wrong shape → `'corrupt'`, 0 kept;
+      1-of-3 invalid records → `'ok'`, 2 kept, `dropped: 1`; all-valid roundtrip.
 - [ ] 1.9 **Phase 1 test task** — full gates, paste output, wait for OK.
       Reflect: any new pattern or decision → update AGENTS.md.
 
@@ -115,12 +130,12 @@ where validation lives, edge cases) and wait for OK before coding.
       Reflect: any new pattern or decision → update AGENTS.md.
 
 ## Phase 6 — Persistence wiring
-- [ ] 6.1 Hydration in App: loads from localStorage on init; invalid records dropped with `console.warn`.
-      Done when: tests seed storage → only valid expenses render, warn spy called once per bad record.
+- [ ] 6.1 Hydration in App: loads from localStorage on init; invalid records dropped per `parseStoredPayload` status/dropped.
+      Done when: tests seed storage → only valid expenses render, dropped count matches bad records.
 - [ ] 6.2 Save roundtrip: mutation writes `StoredPayload`; fresh mount re-reads it.
       Done when: tests: mutate → assert storage JSON shape → re-mount App → same list shown.
-- [ ] 6.3 `AlertBanner.vue`: `role="alert"` while `writeFailed`, hidden after a successful write.
-      Done when: tests: banner visible on failure, gone once retry succeeds.
+- [ ] 6.3 `AlertBanner.vue`: `role="alert"` while `writeFailed`, hidden after a successful write; also shows 'saved data unreadable' (status corrupt) or 'N entries skipped' (dropped > 0).
+      Done when: tests: banner visible on failure, gone once retry succeeds; corrupt/dropped storage messages render.
 - [ ] 6.4 **Phase 6 test task** — full gates, paste output, wait for OK.
       Manual browser check in `npm run dev` (mutate, refresh, confirm the data survives).
       Reflect: any new pattern or decision → update AGENTS.md.

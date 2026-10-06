@@ -13,10 +13,10 @@ Never claim test/lint/typecheck pass without running them and pasting real outpu
 
 ## Data model
 `Expense { id: UUID; description: string; amountCents: integer; category: Category; date: 'YYYY-MM-DD'; createdAt: ISO; updatedAt?: ISO }` — all types in `src/types.ts`, imported with `import type` (incl. `import type { Category } from './categories'`).
-`enum Category { Food = 'food', Transport = 'transport', Entertainment = 'entertainment', Other = 'other' }` and `CATEGORIES: readonly { id: Category; label: string; color: string }[]` are exported from `src/categories.ts` — one entry per member (labels Food/Transport/Entertainment/Other); CATEGORIES feeds form, filter and dashboard.
+`enum Category { Food = 'food', Transport = 'transport', Entertainment = 'entertainment', Other = 'other' }`, `CATEGORIES: readonly { id: Category; label: string; color: string }[]` and `isCategory(v: unknown): v is Category` are exported from `src/categories.ts` — one CATEGORIES entry per member (labels Food/Transport/Entertainment/Other); CATEGORIES feeds form, filter and dashboard.
 Membership checks use `Object.values(Category)`; stored JSON holds the string values, tests use `Category.Food`.
 `SortField` `'date'|'amount'`, `SortOrder` `'asc'|'desc'` — string-literal unions, not enums. `CategoryFilter` = `Category|'all'`; `FilterOptions { category: CategoryFilter; sortField: SortField; sortOrder: SortOrder }`.
-`ExpenseInput` = `Omit<Expense,'id'|'createdAt'|'updatedAt'>`; `FormErrors` = `Partial<Record<keyof ExpenseInput,string>>`; `CategorySummary { category; label; color?; totalCents; count; sharePercent: number }`; `StoredPayload { version: 1; expenses }`.
+`ExpenseInput` = `Omit<Expense,'id'|'createdAt'|'updatedAt'>`; `ExpenseDraft { description: string; amount: string; category: Category | null; date: string }`; `FormErrors` = `Partial<Record<keyof ExpenseDraft,string>>`; `ValidationResult = { ok: true; value: ExpenseInput } | { ok: false; errors: FormErrors }`; `CategorySummary { category; label; color?; totalCents; count; sharePercent: number }`; `StoredPayload { version: 1; expenses }`.
 State stores integer cents only.
 
 ## Architecture
@@ -33,7 +33,7 @@ category: required, a `Category` member (`Object.values(Category)`), no default.
 Timing: untouched = silent; blur validates; once invalid, live on input; submit validates all, shows all, focuses first invalid. Re-validate everything loaded from localStorage.
 
 ## Storage
-Key `expense-tracker:v1`, shape `StoredPayload`. Missing key → empty. Parse/shape/version≠1 → `console.warn`, discard, start empty (no overwrite until first mutation). Invalid single record → drop it, keep rest.
+Key `expense-tracker:v1`, shape `StoredPayload`. Missing key → empty. Parse/shape/version≠1 → status `'corrupt'`, discard, start empty (no overwrite until first mutation); AlertBanner shows 'saved data unreadable'. Invalid single record → drop it, keep rest; AlertBanner shows 'N entries skipped' when dropped > 0.
 Write fails (quota/private mode) → in-memory state wins, persistent `role="alert"` banner, retry on every mutation, hide banner once a write succeeds.
 
 ## Behavior rules
@@ -49,7 +49,7 @@ Fields: visible `<label for>`, `aria-invalid` + `aria-describedby`, `fieldset`/`
 Toasts: one `aria-live="polite"` region, ≤ 3, auto-dismiss ~4s, close button. Keyboard-only: native elements, no positive tabindex, visible focus rings.
 
 ## Boundaries
-`strict: true` stays. No `any` (use `unknown` + narrow), no `@ts-expect-error`/`@ts-ignore` escapes, no deps without asking, no features beyond **Features**, never claim green checks you didn't run.
+`strict: true` stays. No `any` (use `unknown` + narrow), no `@ts-expect-error`/`@ts-ignore` escapes, no deps without asking, no features beyond **Features**, never claim green checks you didn't run. JSON.parse result is assigned to `unknown`; type guards, never `as` casts to bypass narrowing.
 
 ## Build order
 Follow tasks.md, one phase at a time. Per phase: plan (complex tasks) → build → run gates → reflect → update AGENTS.md if a decision changed. Stop after each phase, paste real test/typecheck/lint output, wait for OK.
