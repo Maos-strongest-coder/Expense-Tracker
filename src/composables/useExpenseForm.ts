@@ -30,6 +30,7 @@ export interface UseExpenseFormResult {
   setField: (field: FormField, value: string | Category | null) => void
   blurField: (field: FormField) => void
   validateAll: () => boolean
+  submit: () => ExpenseInput | null
   firstInvalidField: () => FormField | null
   reset: (initial?: ExpenseInput | null) => void
 }
@@ -59,10 +60,14 @@ export function useExpenseForm(initial?: ExpenseInput | null): UseExpenseFormRes
     errors.value[field] = validateFieldUtil(field, draft.value)
   }
 
-  function validateAll(): boolean {
+  function submit(): ExpenseInput | null {
     const result = validateExpense(draft.value)
     errors.value = result.ok ? {} : result.errors
-    return result.ok
+    return result.ok ? result.value : null
+  }
+
+  function validateAll(): boolean {
+    return submit() !== null
   }
 
   function firstInvalidField(): FormField | null {
@@ -81,5 +86,5 @@ export function useExpenseForm(initial?: ExpenseInput | null): UseExpenseFormRes
     errors.value = {}
   }
 
-  return { draft, touched, errors, isDirty, setField, blurField, validateAll, firstInvalidField, reset }
+  return { draft, touched, errors, isDirty, setField, blurField, validateAll, submit, firstInvalidField, reset }
 }
