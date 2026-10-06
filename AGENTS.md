@@ -24,6 +24,7 @@ State stores integer cents only.
 - `useExpenses()` is called once in `App.vue`; other composables receive its list as an argument (single source of truth).
 - Pure logic in `src/utils/` (validation, cents parsing/formatting, sorting, date checks, stored-payload parsing) — no DOM, no storage, unit tested.
 - Components get data via props and emit events. Containers: `App.vue` and `ExpenseForm.vue`; all others presentational.
+- Tests co-located as `src/**/*.test.ts` (vitest + happy-dom env in `vite.config.ts`); component names must be multi-word (`vue/essential`).
 - Only `useLocalStorage` touches localStorage. No Pinia, no UI libraries, no new deps without asking.
 
 ## Validation
