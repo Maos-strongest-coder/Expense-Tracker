@@ -43,7 +43,7 @@ Mutations update the in-memory list first (optimistic), then persist — storage
 Empty state ("no expenses yet" + CTA) ≠ no-results ("clear filters"). Edit prefills; save updates `updatedAt`, keeps id/createdAt; cancel = no change.
 After a successful add the form resets; after a save it leaves edit mode. If a saved item is hidden by the active filter, a toast says so. Delete only via confirm dialog (ESC/backdrop/Cancel abort).
 Reset/prefill/cancel are implemented by force-remounting `ExpenseForm` in `App.vue` via `:key` (`edit-${id}` vs `create-${formVersion}`) — don't mutate form state from the outside instead.
-Save stays enabled in create mode (so submit can show all errors and focus the first invalid field); in edit mode it is disabled while the form is not dirty. Format `Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'})` on `amountCents/100`; total 0 → `€ 0,00`, never NaN/empty.
+Save stays enabled in create mode (so submit can show all errors and focus the first invalid field); in edit mode it is disabled while the form is not dirty. Format `Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'})` on `amountCents/100`; total 0 → `€ 0,00`, never NaN/empty. Dashboard `sharePercent` = 1 decimal (`Math.round(x*1000)/10`), guarded to 0 when the total is 0.
 
 ## UX & accessibility
 Disabled: filter/sort when list empty, Save in edit mode when not dirty. Modal: `role="dialog"`, `aria-modal`, `aria-labelledby`, focus trap, initial focus on Cancel, ESC/backdrop close, focus restored.

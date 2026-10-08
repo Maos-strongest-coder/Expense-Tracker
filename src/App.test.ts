@@ -293,4 +293,27 @@ describe('App', () => {
 
     expect(wrapper.findAll('.expense-description').map((n) => n.text())).toEqual(['Cinema'])
   })
+
+  it('shows the dashboard total over ALL expenses, ignoring the active filter', async () => {
+    const other: Expense = {
+      ...existing,
+      id: 'id-2',
+      description: 'Cinema',
+      category: Category.Entertainment,
+      amountCents: 2000,
+    }
+    seed([existing, other])
+    const wrapper = mountApp()
+    await flushPromises()
+
+    const total = () => wrapper.find('.dashboard-total-value').text()
+    expect(total()).toBe(formatCents(1234 + 2000))
+
+    await wrapper.find('#category-filter').setValue(Category.Entertainment)
+    await flushPromises()
+
+    expect(wrapper.findAll('.expense-item')).toHaveLength(1)
+    expect(total()).toBe(formatCents(1234 + 2000))
+    expect(wrapper.findAll('.dashboard-category')).toHaveLength(4)
+  })
 })

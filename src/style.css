@@ -81,6 +81,62 @@ select {
   padding: 8px 12px;
 }
 
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.dashboard-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 2px solid var(--border);
+}
+
+.dashboard-total-label {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.dashboard-total-value {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.dashboard-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dashboard-category {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 16px;
+  align-items: baseline;
+  font-size: 14px;
+}
+
+.dashboard-category-amount {
+  font-weight: 600;
+}
+
+.dashboard-category-count,
+.dashboard-category-share {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;

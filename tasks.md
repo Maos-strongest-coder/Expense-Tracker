@@ -120,14 +120,14 @@ where validation lives, edge cases) and wait for OK before coding.
       Reflect: any new pattern or decision → update AGENTS.md.
 
 ## Phase 5 — Dashboard summary
-- [ ] 5.1 `useExpenseSummary(all)`: `totalCents` over ALL expenses + `CategorySummary[]` (all 4, zeros included),
+- [x] 5.1 `useExpenseSummary(all)`: `totalCents` over ALL expenses + `CategorySummary[]` (all 4, zeros included),
       each with `sharePercent` (guarded: total 0 → 0, never NaN).
       Done when: tests: total ignores any filter, per-category sums/counts, all-zero → 4 zero rows,
       `sharePercent` is 0 when total is 0 and never NaN.
-- [ ] 5.2 `DashboardSummary.vue`: total via `formatCents` (0 → `'€\u00a00,00'`) + 4 colored rows with amount, count and `sharePercent`.
+- [x] 5.2 `DashboardSummary.vue`: total via `formatCents` (0 → `'€\u00a00,00'`) + 4 colored rows with amount, count and `sharePercent`.
       Done when: tests: renders total + 4 rows incl. `sharePercent`; total 0 renders exactly `'€\u00a00,00'`
       (nl-NL puts a non-breaking space after `€` — compare `'€\u00a0…'` or normalize via a helper).
-- [ ] 5.3 **Phase 5 test task** — full gates, paste output, wait for OK.
+- [x] 5.3 **Phase 5 test task** — full gates, paste output, wait for OK.
       Manual browser check in `npm run dev` (walk the dashboard by hand).
       Reflect: any new pattern or decision → update AGENTS.md.
 

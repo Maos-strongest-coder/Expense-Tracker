@@ -2,12 +2,14 @@
 import { computed, ref } from 'vue'
 
 import CategoryFilter from './components/CategoryFilter.vue'
+import DashboardSummary from './components/DashboardSummary.vue'
 import ExpenseForm from './components/ExpenseForm.vue'
 import ExpenseList from './components/ExpenseList.vue'
 import ConfirmDialog from './components/ConfirmDialog.vue'
 import SortControls from './components/SortControls.vue'
 import { useExpenseFilters } from './composables/useExpenseFilters'
 import { useExpenses } from './composables/useExpenses'
+import { useExpenseSummary } from './composables/useExpenseSummary'
 import { useLocalStorage } from './composables/useLocalStorage'
 import { useToasts } from './composables/useToasts'
 import type { Expense, ExpenseInput } from './types'
@@ -15,6 +17,7 @@ import type { Expense, ExpenseInput } from './types'
 const { expenses, save } = useLocalStorage()
 const { create, update, remove } = useExpenses(expenses, save)
 const { category, sortField, sortOrder, visible, clear } = useExpenseFilters()
+const summary = useExpenseSummary(expenses)
 
 const visibleExpenses = computed(() => visible(expenses.value))
 
@@ -92,7 +95,9 @@ function focusForm() {
       <h1>Expense Tracker</h1>
     </header>
     <main class="app-main">
-      <section class="dashboard-section" aria-label="Dashboard"></section>
+      <section class="dashboard-section" aria-label="Dashboard">
+        <DashboardSummary :summary="summary" />
+      </section>
       <section class="toolbar" aria-label="Filter and sort expenses">
         <CategoryFilter v-model="category" :disabled="expenses.length === 0" />
         <SortControls
