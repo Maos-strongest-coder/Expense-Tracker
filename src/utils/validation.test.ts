@@ -45,6 +45,7 @@ describe('validateField — amount', () => {
   it('requires an amount', () => {
     expect(validateField('amount', draftWith({ amount: '' }))).toBe('Amount is required')
     expect(validateField('amount', draftWith({ amount: '   ' }))).toBe('Amount is required')
+    expect(validateField('amount', draftWith({ amount: '€' }))).toBe('Amount is required')
   })
 
   it('rejects an invalid amount', () => {
@@ -63,6 +64,7 @@ describe('validateField — amount', () => {
 
   it('accepts a valid amount', () => {
     expect(validateField('amount', validDraft)).toBeUndefined()
+    expect(validateField('amount', draftWith({ amount: '€ 12,34' }))).toBeUndefined()
   })
 })
 

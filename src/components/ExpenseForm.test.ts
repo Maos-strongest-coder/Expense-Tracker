@@ -121,6 +121,6 @@ describe('ExpenseForm markup', () => {
 
     expect(wrapper.emitted('cancel')).toHaveLength(1)
     expect(wrapper.emitted('save')).toBeUndefined()
-    expect(wrapper.find('#expense-description').element.value).toBe('Lunch')
+    expect((wrapper.find('#expense-description').element as HTMLInputElement).value).toBe('Lunch')
   })
 })

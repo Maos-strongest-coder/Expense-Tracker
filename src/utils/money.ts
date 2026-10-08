@@ -1,7 +1,11 @@
 const AMOUNT_PATTERN = /^([+-]?)(\d+|\d{1,3}(?:\.\d{3})+)(?:[,.](\d{1,2}))?$/
 
+export function stripCurrencyPrefix(raw: string): string {
+  return raw.replace(/^€[\s\u00a0]*/, '').trim()
+}
+
 export function parseAmountToCents(raw: string): number | null {
-  const match = AMOUNT_PATTERN.exec(raw.trim())
+  const match = AMOUNT_PATTERN.exec(stripCurrencyPrefix(raw))
   if (!match) return null
 
   const [, sign, integerPart, fractionPart] = match

@@ -21,16 +21,23 @@ describe('parseAmountToCents', () => {
     ['-5', -500],
     ['0', 0],
     ['1,23', 123],
+    [euro('12,34'), 1234],
+    ['€12,34', 1234],
   ])('parses %s → %i', (raw, expected) => {
     expect(parseAmountToCents(raw)).toBe(expected)
   })
 
-  it.each(['', 'abc', '12.', '1.234', '1,234.56', '12,345', '1.234.567', '12,34.56', '+-5', '1.2.34'])(
+  it.each(['', 'abc', '12.', '1.234', '1,234.56', '12,345', '1.234.567', '12,34.56', '+-5', '1.2.34', '€'])(
     'returns null for %s',
     (raw) => {
       expect(parseAmountToCents(raw)).toBeNull()
     },
   )
+
+  it('round-trips the form prefill format', () => {
+    expect(parseAmountToCents(formatCents(1234))).toBe(1234)
+    expect(parseAmountToCents(formatCents(0))).toBe(0)
+  })
 
   it('rejects 3 decimals', () => {
     expect(parseAmountToCents('12,345')).toBeNull()

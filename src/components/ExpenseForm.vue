@@ -12,7 +12,7 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-const { draft, errors, setField, blurField, submit, firstInvalidField, reset } = useExpenseForm(props.initial)
+const { draft, errors, setField, blurField, submit, firstInvalidField } = useExpenseForm(props.initial)
 
 function onInput(field: 'description' | 'amount' | 'date', event: Event) {
   setField(field, (event.target as HTMLInputElement).value)
@@ -33,7 +33,6 @@ function onSubmit() {
     return
   }
   emit('save', value)
-  reset()
 }
 
 function onCancel() {

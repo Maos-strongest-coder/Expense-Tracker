@@ -3,7 +3,7 @@ import { nextTick, ref, watch } from 'vue'
 
 import { useConfirmDialog } from '../composables/useConfirmDialog'
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     title?: string
     message?: string
@@ -85,7 +85,9 @@ function onBackdropClick(): void {
   onCancel()
 }
 
-defineExpose({ open })
+defineExpose<{
+  open: () => Promise<boolean>
+}>({ open })
 </script>
 
 <template>

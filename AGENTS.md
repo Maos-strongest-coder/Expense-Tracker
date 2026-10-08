@@ -28,7 +28,7 @@ State stores integer cents only.
 - Only `useLocalStorage` touches localStorage. No Pinia, no UI libraries, no new deps without asking.
 
 ## Validation
-description: required, trimmed 2–120. amount: required, `12`/`12,34`/`12.34` → integer cents; a lone dot (`'1.234'`) is rejected as ambiguous; `'1.234,56'` is valid; > 0 and ≤ 100000000.
+description: required, trimmed 2–120. amount: required, `12`/`12,34`/`12.34` → integer cents; a lone dot (`'1.234'`) is rejected as ambiguous; `'1.234,56'` is valid; > 0 and ≤ 100000000. An optional leading `€` (the form's own edit-prefill format) is stripped before parsing.
 category: required, a `Category` member (`Object.values(Category)`), no default. date: strict `YYYY-MM-DD`, real calendar date, ≥ 2000-01-01, not in the future (local tz).
 Timing: untouched = silent; blur validates; once invalid, live on input; submit validates all, shows all, focuses first invalid. Re-validate everything loaded from localStorage.
 

@@ -1,7 +1,7 @@
 import { isCategory } from '../categories'
 import type { ExpenseDraft, ExpenseInput, FormErrors, ValidationResult } from '../types'
 import { isCalendarDate, isFutureDate, MIN_DATE } from './dates'
-import { parseAmountToCents } from './money'
+import { parseAmountToCents, stripCurrencyPrefix } from './money'
 
 export const MAX_AMOUNT_CENTS = 100_000_000
 
@@ -15,7 +15,7 @@ export function validateField(field: keyof ExpenseDraft, draft: ExpenseDraft): s
       return undefined
     }
     case 'amount': {
-      if (draft.amount.trim().length === 0) return 'Amount is required'
+      if (stripCurrencyPrefix(draft.amount).length === 0) return 'Amount is required'
       const cents = parseAmountToCents(draft.amount)
       if (cents === null) return 'Enter a valid amount, max 2 decimals'
       if (cents <= 0) return 'Amount must be greater than 0'

@@ -1,12 +1,12 @@
 ﻿import { afterEach, describe, expect, it } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 
 import ConfirmDialog from './ConfirmDialog.vue'
 
-const wrappers: ReturnType<typeof mount>[] = []
+const wrappers: VueWrapper[] = []
 
-function mountDialog(): ReturnType<typeof mount> {
-  const wrapper = mount(ConfirmDialog, { attachTo: document.body })
+function mountDialog(): VueWrapper<InstanceType<typeof ConfirmDialog>> {
+  const wrapper = mount<typeof ConfirmDialog, typeof ConfirmDialog>(ConfirmDialog, { attachTo: document.body })
   wrappers.push(wrapper)
   return wrapper
 }
