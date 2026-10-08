@@ -4,10 +4,12 @@ import { computed, ref } from 'vue'
 import CategoryFilter from './components/CategoryFilter.vue'
 import AlertBanner from './components/AlertBanner.vue'
 import DashboardSummary from './components/DashboardSummary.vue'
+import EmptyState from './components/EmptyState.vue'
 import ExpenseForm from './components/ExpenseForm.vue'
 import ExpenseList from './components/ExpenseList.vue'
 import ConfirmDialog from './components/ConfirmDialog.vue'
 import SortControls from './components/SortControls.vue'
+import ToastStack from './components/ToastStack.vue'
 import { useExpenseFilters } from './composables/useExpenseFilters'
 import { useExpenses } from './composables/useExpenses'
 import { useExpenseSummary } from './composables/useExpenseSummary'
@@ -119,24 +121,13 @@ function focusForm() {
         />
       </section>
       <section class="list-section" aria-label="Expenses">
-        <div v-if="expenses.length === 0" class="empty-state">
-          <p>No expenses yet.</p>
-          <button type="button" @click="focusForm">Add your first expense</button>
-        </div>
-        <div v-else-if="visibleExpenses.length === 0" class="no-results">
-          <p>No expenses match your filters.</p>
-          <button type="button" @click="clearFilters">Clear filters</button>
-        </div>
+        <EmptyState v-if="expenses.length === 0" mode="empty" @cta="focusForm" />
+        <EmptyState v-else-if="visibleExpenses.length === 0" mode="no-results" @cta="clearFilters" />
         <ExpenseList v-else :expenses="visibleExpenses" @edit="onEdit" @delete="onDelete" />
       </section>
     </main>
 
-    <div class="toast-stack" aria-live="polite" aria-atomic="true">
-      <div v-for="toast in toasts" :key="toast.id" class="toast" role="alert">
-        <span>{{ toast.message }}</span>
-        <button type="button" @click="dismissToast(toast.id)" aria-label="Dismiss">×</button>
-      </div>
-    </div>
+    <ToastStack :toasts="toasts" @dismiss="dismissToast" />
 
     <ConfirmDialog
       ref="confirmDialogRef"

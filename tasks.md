@@ -143,14 +143,14 @@ where validation lives, edge cases) and wait for OK before coding.
       Reflect: any new pattern or decision → update AGENTS.md.
 
 ## Phase 7 — Polish
-- [ ] 7.1 Empty vs no-results states (`EmptyState.vue`, mode prop): add-CTA vs clear-filters.
+- [x] 7.1 Empty vs no-results states (`EmptyState.vue`, mode prop): add-CTA vs clear-filters.
       (Copy already lives inline in App.vue from 4.4 — extract it into the component here.)
       Done when: tests assert the right copy and button per mode.
-- [ ] 7.2 `ToastStack.vue`: one `aria-live="polite"` region, max 3, 4 s auto-dismiss, close button; wired to `useToasts`.
+- [x] 7.2 `ToastStack.vue`: one `aria-live="polite"` region, max 3, 4 s auto-dismiss, close button; wired to `useToasts`.
       Done when: tests: region attributes, 4th toast rejected, auto-removal with fake timers, close removes.
-- [ ] 7.3 Disabled states: Save disabled while edit form not dirty; filter/sort disabled while list empty.
+- [x] 7.3 Disabled states: Save disabled while edit form not dirty; filter/sort disabled while list empty.
       Done when: tests assert `disabled` in both cases and enabled in their counterparts.
-- [ ] 7.4 Accessibility audit: label↔input association for every field, `aria-invalid`/`aria-describedby` wiring,
+- [x] 7.4 Accessibility audit: label↔input association for every field, `aria-invalid`/`aria-describedby` wiring,
       keyboard-only path, visible focus rings, dialog focus trap re-verified.
       Manual keyboard checklist (all must pass):
       - Tab order: filter → sort → form fields → Save → Cancel → list actions.
@@ -158,9 +158,9 @@ where validation lives, edge cases) and wait for OK before coding.
       - Delete opens the dialog with focus on Cancel; Tab cycles only inside; Esc closes; focus returns to the Delete button.
       - Every interactive element has a visible focus ring; toasts never steal focus.
       Done when: component tests assert label/for + aria attrs on all fields; the manual keyboard checklist above passes.
-- [ ] 7.5 Visual polish: layout, responsive, category colors, spacing — plain CSS only, no new deps.
+- [x] 7.5 Visual polish: layout, responsive, category colors, spacing — plain CSS only, no new deps.
       Done when: `npm run build` green + visual check in `npm run dev`.
-- [ ] 7.6 **Final verification** — `test`, `typecheck`, `lint`, `build` all green; paste all output; wait for OK.
+- [x] 7.6 **Final verification** — `test`, `typecheck`, `lint`, `build` all green; paste all output; wait for OK.
       Manual browser check in `npm run dev` (full click-through of every feature).
       Reflect: any new pattern or decision → update AGENTS.md.
 

@@ -197,6 +197,178 @@ select:disabled {
   color: var(--text-muted);
 }
 
+.expense-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field > label,
+.field legend {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.fieldset,
+fieldset.field {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 0;
+  border: none;
+}
+
+fieldset.field legend {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.radio-label input {
+  accent-color: var(--accent);
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actions button[type='submit'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.actions button[type='submit']:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.expense-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.expense-item {
+  display: grid;
+  grid-template-columns: 90px 1fr auto auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.15s ease;
+}
+
+.expense-item:hover {
+  border-color: var(--accent);
+}
+
+.expense-date {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.expense-description {
+  overflow-wrap: anywhere;
+}
+
+.expense-amount {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.expense-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.expense-actions button {
+  padding: 4px 12px;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .app-main {
+    gap: 16px;
+  }
+
+  .expense-item {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'date actions'
+      'description actions'
+      'category actions'
+      'amount actions';
+    row-gap: 4px;
+  }
+
+  .expense-date {
+    grid-area: date;
+  }
+
+  .expense-description {
+    grid-area: description;
+  }
+
+  .expense-category {
+    grid-area: category;
+  }
+
+  .expense-amount {
+    grid-area: amount;
+  }
+
+  .expense-actions {
+    grid-area: actions;
+  }
+
+  .dashboard-category {
+    grid-template-columns: 1fr auto;
+    row-gap: 2px;
+  }
+
+  .dashboard-category-count,
+  .dashboard-category-share {
+    grid-column: 2;
+    justify-self: end;
+  }
+}
+
 input[aria-invalid='true'] {
   border-color: var(--danger);
 }

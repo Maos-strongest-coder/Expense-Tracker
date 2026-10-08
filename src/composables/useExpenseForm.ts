@@ -22,6 +22,19 @@ function toDraft(expense: Expense | ExpenseInput): ExpenseDraft {
   }
 }
 
+function normalizeAmount(amount: string): string {
+  return amount.replace(/[€\s]/g, '')
+}
+
+function sameDraft(a: ExpenseDraft, b: ExpenseDraft): boolean {
+  return (
+    a.description === b.description &&
+    normalizeAmount(a.amount) === normalizeAmount(b.amount) &&
+    a.category === b.category &&
+    a.date === b.date
+  )
+}
+
 export interface UseExpenseFormResult {
   draft: Ref<ExpenseDraft>
   touched: Record<FormField, boolean>
@@ -46,7 +59,7 @@ export function useExpenseForm(initial?: ExpenseInput | null): UseExpenseFormRes
   })
   const errors = ref<FormErrors>({})
 
-  const isDirty = computed(() => JSON.stringify(draft.value) !== JSON.stringify(baseline.value))
+  const isDirty = computed(() => !sameDraft(draft.value, baseline.value))
 
   function setField(field: FormField, value: string | Category | null): void {
     Object.assign(draft.value, { [field]: value })

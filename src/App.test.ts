@@ -220,7 +220,7 @@ describe('App', () => {
 
     expect(wrapper.findAll('.expense-item')).toHaveLength(0)
     expect(wrapper.find('.no-results').text()).toContain('No expenses match your filters')
-    expect(wrapper.find('.empty-state').exists()).toBe(false)
+    expect(wrapper.find('.empty-state').text()).not.toContain('No expenses yet')
 
     await wrapper.find('.no-results button').trigger('click')
     await flushPromises()

@@ -123,4 +123,76 @@ describe('ExpenseForm markup', () => {
     expect(wrapper.emitted('save')).toBeUndefined()
     expect((wrapper.find('#expense-description').element as HTMLInputElement).value).toBe('Lunch')
   })
+
+  it('strips non-numerical characters from the amount field on input', async () => {
+    const wrapper = mountForm()
+    await wrapper.find('#expense-amount').setValue('12abc,34x')
+
+    expect((wrapper.find('#expense-amount').element as HTMLInputElement).value).toBe('12,34')
+  })
+
+  it('keeps digits, separators and the euro sign in the amount field', async () => {
+    const wrapper = mountForm()
+    await wrapper.find('#expense-amount').setValue('€ 1.234,56')
+
+    expect((wrapper.find('#expense-amount').element as HTMLInputElement).value).toBe('€ 1.234,56')
+  })
+
+  it('wires aria-invalid and aria-describedby on the category radios when invalid', async () => {
+    const wrapper = mountForm()
+    await wrapper.find('form').trigger('submit')
+    await wrapper.vm.$nextTick()
+
+    const radio = wrapper.find(`#expense-category-${Category.Food}`)
+    expect(radio.attributes('aria-invalid')).toBe('true')
+    expect(radio.attributes('aria-describedby')).toBe('expense-category-error')
+    expect(wrapper.find('#expense-category-error').exists()).toBe(true)
+  })
+})
+
+describe('ExpenseForm save button', () => {
+  it('stays enabled in create mode so submit can show all errors', () => {
+    const wrapper = mountForm()
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined()
+  })
+
+  it('is disabled in edit mode while the form is not dirty', async () => {
+    const wrapper = mount(ExpenseForm, {
+      props: {
+        initial: {
+          description: 'Lunch',
+          amountCents: 1234,
+          category: Category.Food,
+          date: '2026-10-01',
+        },
+      },
+    })
+    wrappers.push(wrapper)
+
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
+
+    await wrapper.find('#expense-amount').setValue('20,00')
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined()
+  })
+
+  it('disables again in edit mode when the edit is reverted', async () => {
+    const wrapper = mount(ExpenseForm, {
+      props: {
+        initial: {
+          description: 'Lunch',
+          amountCents: 1234,
+          category: Category.Food,
+          date: '2026-10-01',
+        },
+      },
+    })
+    wrappers.push(wrapper)
+
+    const amount = wrapper.find('#expense-amount')
+    await amount.setValue('20,00')
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined()
+
+    await amount.setValue('12,34')
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
+  })
 })

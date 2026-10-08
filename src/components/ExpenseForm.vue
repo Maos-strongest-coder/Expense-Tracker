@@ -12,10 +12,20 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-const { draft, errors, setField, blurField, submit, firstInvalidField } = useExpenseForm(props.initial)
+const { draft, errors, isDirty, setField, blurField, submit, firstInvalidField } = useExpenseForm(props.initial)
+
+function filterAmount(raw: string): string {
+  const hasEuro = raw.trimStart().startsWith('€')
+  const digits = raw.replace(/[^0-9,.]/g, '')
+  return hasEuro ? `€ ${digits}` : digits
+}
 
 function onInput(field: 'description' | 'amount' | 'date', event: Event) {
-  setField(field, (event.target as HTMLInputElement).value)
+  const target = event.target
+  if (!(target instanceof HTMLInputElement)) return
+  const raw = target.value
+  const value = field === 'amount' ? filterAmount(raw) : raw
+  setField(field, value)
 }
 
 function hasError(field: 'description' | 'amount' | 'category' | 'date'): boolean {
@@ -119,7 +129,7 @@ function focusFirstInvalid() {
     </div>
 
     <div class="actions">
-      <button type="submit">Save</button>
+      <button type="submit" :disabled="initial != null && !isDirty">Save</button>
       <button type="button" @click="onCancel">Cancel</button>
     </div>
   </form>

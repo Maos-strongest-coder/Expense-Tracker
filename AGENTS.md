@@ -31,7 +31,9 @@ State stores integer cents only.
 ## Validation
 description: required, trimmed 2–120. amount: required, `12`/`12,34`/`12.34` → integer cents; a lone dot (`'1.234'`) is rejected as ambiguous; `'1.234,56'` is valid; > 0 and ≤ 100000000. An optional leading `€` (the form's own edit-prefill format) is stripped before parsing.
 category: required, a `Category` member (`Object.values(Category)`), no default. date: strict `YYYY-MM-DD`, real calendar date, ≥ 2000-01-01, not in the future (local tz).
+The amount field filters input to digits/`,`/`.` only (a leading `€` is kept and normalized to `€ ` + digits) — letters never reach the draft; ambiguity (`'1.234'`) is still caught by validation.
 Timing: untouched = silent; blur validates; once invalid, live on input; submit validates all, shows all, focuses first invalid. Re-validate everything loaded from localStorage.
+Dirty check (`useExpenseForm.isDirty`) compares draft vs baseline with the amount's `€` prefix normalized away — the edit prefill uses `formatCents` (`'€ 12,34'`) while typed input is `'12,34'`, so reverting an amount edit must re-disable Save.
 
 ## Storage
 Key `expense-tracker:v1`, shape `StoredPayload`. Missing key → empty. Parse/shape/version≠1 → status `'corrupt'`, discard, start empty (no overwrite until first mutation); AlertBanner shows 'saved data unreadable'. Invalid single record → drop it, keep rest; AlertBanner shows 'N entries skipped' when dropped > 0.
