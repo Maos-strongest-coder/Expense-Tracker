@@ -165,7 +165,7 @@ where validation lives, edge cases) and wait for OK before coding.
       Reflect: any new pattern or decision → update AGENTS.md.
 
 ## Phase 8 — Stretch (only if time)
-- [ ] 8.1 Cross-tab `storage` event: adopt re-validated payload; removed key → empty list.
+- [x] 8.1 Cross-tab `storage` event: adopt re-validated payload; removed key → empty list.
       Done when: tests dispatch StorageEvent with valid / invalid / removed values → state matches each case.
-- [ ] 8.2 Expense edited here deleted in another tab → draft discarded + toast pushed.
+- [x] 8.2 Expense edited here deleted in another tab → draft discarded + toast pushed.
       Done when: test: open edit → fire external-delete event → form resets, toast present.

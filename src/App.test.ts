@@ -401,4 +401,24 @@ describe('App', () => {
     expect(wrapper.find('.alert-banner').exists()).toBe(false)
     expect(wrapper.findAll('.expense-item')).toHaveLength(2)
   })
+
+  it('discards the draft and toasts when the edited expense is deleted in another tab', async () => {
+    seed([existing])
+    const wrapper = mountApp()
+    await flushPromises()
+
+    await wrapper.findAll('.expense-item button')[0].trigger('click')
+    await flushPromises()
+    expect((wrapper.find('#expense-description').element as HTMLInputElement).value).toBe('Lunch')
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, expenses: [] }))
+    const event = new Event('storage')
+    Object.assign(event, { key: STORAGE_KEY, newValue: null })
+    window.dispatchEvent(event)
+    await flushPromises()
+
+    expect((wrapper.find('#expense-description').element as HTMLInputElement).value).toBe('')
+    expect(wrapper.find('.toast').text()).toContain('deleted in another tab')
+    expect(wrapper.find('.empty-state').exists()).toBe(true)
+  })
 })

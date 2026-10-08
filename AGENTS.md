@@ -38,6 +38,7 @@ Dirty check (`useExpenseForm.isDirty`) compares draft vs baseline with the amoun
 ## Storage
 Key `expense-tracker:v1`, shape `StoredPayload`. Missing key → empty. Parse/shape/version≠1 → status `'corrupt'`, discard, start empty (no overwrite until first mutation); AlertBanner shows 'saved data unreadable'. Invalid single record → drop it, keep rest; AlertBanner shows 'N entries skipped' when dropped > 0.
 Write fails (quota/private mode) → in-memory state wins, persistent `role="alert"` banner, retry on every mutation, hide banner once a write succeeds.
+Cross-tab: `storage` events re-validate and replace the list (`onStorageEvent` is called after adoption, not instead of it); if the expense being edited vanishes externally, App resets the edit draft and toasts 'deleted in another tab'.
 
 ## Behavior rules
 Filter first, then sort (default date desc); tie-breaker: equal keys → `createdAt` in the same direction as the primary sort, then `id` asc. Dashboard ignores filter/sort.

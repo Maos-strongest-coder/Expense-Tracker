@@ -47,12 +47,11 @@ export function useLocalStorage(options: UseLocalStorageOptions = {}): UseLocalS
 
   function handleStorageEvent(event: StorageEventLike): void {
     if (event.key !== STORAGE_KEY) return
-    if (options.onStorageEvent) {
-      options.onStorageEvent(event)
-      return
-    }
     const result = parseStoredPayload(storage.getItem(STORAGE_KEY))
     expenses.value = result.expenses
+    if (options.onStorageEvent) {
+      options.onStorageEvent(event)
+    }
   }
 
   window.addEventListener('storage', handleStorageEvent)

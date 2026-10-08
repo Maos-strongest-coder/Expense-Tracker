@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import CategoryFilter from './components/CategoryFilter.vue'
 import AlertBanner from './components/AlertBanner.vue'
@@ -17,12 +17,27 @@ import { useLocalStorage } from './composables/useLocalStorage'
 import { useToasts } from './composables/useToasts'
 import type { Expense, ExpenseInput } from './types'
 
-const { expenses, writeFailed, status, dropped, save } = useLocalStorage()
+const externalChange = ref(false)
+const { expenses, writeFailed, status, dropped, save } = useLocalStorage({
+  onStorageEvent: () => {
+    externalChange.value = true
+  },
+})
 const { create, update, remove } = useExpenses(expenses, save)
 const { category, sortField, sortOrder, visible, clear } = useExpenseFilters()
 const summary = useExpenseSummary(expenses)
 
 const visibleExpenses = computed(() => visible(expenses.value))
+
+watch(expenses, (list) => {
+  if (!externalChange.value) return
+  externalChange.value = false
+  const editingExpense = editing.value
+  if (editingExpense && !list.some((e) => e.id === editingExpense.id)) {
+    editing.value = null
+    pushToast('This expense was deleted in another tab.')
+  }
+})
 
 const editing = ref<Expense | null>(null)
 const formVersion = ref(0)

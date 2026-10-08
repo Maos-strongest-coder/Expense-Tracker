@@ -12,6 +12,10 @@ class FakeStorage implements StorageLike {
     return this.map.has(key) ? (this.map.get(key) ?? null) : null
   }
 
+  removeItem(key: string): void {
+    this.map.delete(key)
+  }
+
   setItem(key: string, value: string): void {
     if (this.failWrites) throw new Error('quota exceeded')
     this.map.set(key, value)
@@ -116,16 +120,69 @@ describe('useLocalStorage', () => {
     expect(expenses.value).toEqual([])
   })
 
-  it('delegates to the injected onStorageEvent handler', () => {
+  it('calls onStorageEvent after adopting the payload', () => {
     const storage = new FakeStorage()
+    storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, expenses: [validExpense] }))
     const seen: string[] = []
-    const { handleStorageEvent } = useLocalStorage({
+    const { expenses, handleStorageEvent } = useLocalStorage({
       storage,
       onStorageEvent: (event) => {
         if (event.key !== null) seen.push(event.key)
       },
     })
     handleStorageEvent({ key: STORAGE_KEY, newValue: null })
+    expect(expenses.value).toEqual([validExpense])
     expect(seen).toEqual([STORAGE_KEY])
+  })
+})
+
+describe('cross-tab storage events', () => {
+  function dispatchStorageEvent(key: string | null): void {
+    const event = new Event('storage')
+    Object.assign(event, { key, newValue: null })
+    window.dispatchEvent(event)
+  }
+
+  it('adopts a valid payload written by another tab', () => {
+    const storage = new FakeStorage()
+    const { expenses } = loaded(storage)
+    storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, expenses: [validExpense] }))
+
+    dispatchStorageEvent(STORAGE_KEY)
+
+    expect(expenses.value).toEqual([validExpense])
+  })
+
+  it('starts empty when the key is removed in another tab', () => {
+    const storage = new FakeStorage()
+    storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, expenses: [validExpense] }))
+    const { expenses } = loaded(storage)
+    expect(expenses.value).toEqual([validExpense])
+
+    storage.removeItem(STORAGE_KEY)
+    dispatchStorageEvent(STORAGE_KEY)
+
+    expect(expenses.value).toEqual([])
+  })
+
+  it('ignores corrupt data written by another tab', () => {
+    const storage = new FakeStorage()
+    storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, expenses: [validExpense] }))
+    const { expenses } = loaded(storage)
+
+    storage.setItem(STORAGE_KEY, '{not json')
+    dispatchStorageEvent(STORAGE_KEY)
+
+    expect(expenses.value).toEqual([])
+  })
+
+  it('ignores events for other keys', () => {
+    const storage = new FakeStorage()
+    storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, expenses: [validExpense] }))
+    const { expenses } = loaded(storage)
+
+    dispatchStorageEvent('other-key')
+
+    expect(expenses.value).toEqual([validExpense])
   })
 })
