@@ -132,13 +132,13 @@ where validation lives, edge cases) and wait for OK before coding.
       Reflect: any new pattern or decision → update AGENTS.md.
 
 ## Phase 6 — Persistence wiring
-- [ ] 6.1 Hydration in App: loads from localStorage on init; invalid records dropped per `parseStoredPayload` status/dropped.
+- [x] 6.1 Hydration in App: loads from localStorage on init; invalid records dropped per `parseStoredPayload` status/dropped.
       Done when: tests seed storage → only valid expenses render, dropped count matches bad records.
-- [ ] 6.2 Save roundtrip: mutation writes `StoredPayload`; fresh mount re-reads it.
+- [x] 6.2 Save roundtrip: mutation writes `StoredPayload`; fresh mount re-reads it.
       Done when: tests: mutate → assert storage JSON shape → re-mount App → same list shown.
-- [ ] 6.3 `AlertBanner.vue`: `role="alert"` while `writeFailed`, hidden after a successful write; also shows 'saved data unreadable' (status corrupt) or 'N entries skipped' (dropped > 0).
+- [x] 6.3 `AlertBanner.vue`: `role="alert"` while `writeFailed`, hidden after a successful write; also shows 'saved data unreadable' (status corrupt) or 'N entries skipped' (dropped > 0).
       Done when: tests: banner visible on failure, gone once retry succeeds; corrupt/dropped storage messages render.
-- [ ] 6.4 **Phase 6 test task** — full gates, paste output, wait for OK.
+- [x] 6.4 **Phase 6 test task** — full gates, paste output, wait for OK.
       Manual browser check in `npm run dev` (mutate, refresh, confirm the data survives).
       Reflect: any new pattern or decision → update AGENTS.md.
 

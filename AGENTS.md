@@ -25,7 +25,7 @@ State stores integer cents only.
 - Pure logic in `src/utils/` (validation, cents parsing/formatting, sorting, date checks, stored-payload parsing) — no DOM, no storage, unit tested.
 - Components get data via props and emit events. Containers: `App.vue` and `ExpenseForm.vue`; all others presentational. `CategoryFilter.vue` uses `v-model` (`modelValue`/`update:modelValue`), `SortControls.vue` uses `field`/`order` props with `update:field`/`update:order`.
 - Composable refs must be bound at top level in templates (destructured in `App.vue`): refs nested inside a plain object are not unwrapped in templates, so `v-model="filters.category"` would silently desync — use `v-model="category"` instead.
-- Tests co-located as `src/**/*.test.ts` (vitest + happy-dom env in `vite.config.ts`); component names must be multi-word (`vue/essential`). Mount with explicit generics (`mount<typeof Comp, typeof Comp>(...)`) so emits/props typing infers.
+- Tests co-located as `src/**/*.test.ts` (vitest + happy-dom env in `vite.config.ts`); component names must be multi-word (`vue/essential`). Mount with explicit generics (`mount<typeof Comp, typeof Comp>(...)`) so emits/props typing infers. To force a storage write failure, spy on `window.localStorage.setItem` (the instance) — not `Storage.prototype`, happy-dom's storage can expose own methods that shadow it.
 - Only `useLocalStorage` touches localStorage. No Pinia, no UI libraries, no new deps without asking.
 
 ## Validation

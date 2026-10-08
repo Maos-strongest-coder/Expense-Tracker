@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 
 import CategoryFilter from './components/CategoryFilter.vue'
+import AlertBanner from './components/AlertBanner.vue'
 import DashboardSummary from './components/DashboardSummary.vue'
 import ExpenseForm from './components/ExpenseForm.vue'
 import ExpenseList from './components/ExpenseList.vue'
@@ -14,7 +15,7 @@ import { useLocalStorage } from './composables/useLocalStorage'
 import { useToasts } from './composables/useToasts'
 import type { Expense, ExpenseInput } from './types'
 
-const { expenses, save } = useLocalStorage()
+const { expenses, writeFailed, status, dropped, save } = useLocalStorage()
 const { create, update, remove } = useExpenses(expenses, save)
 const { category, sortField, sortOrder, visible, clear } = useExpenseFilters()
 const summary = useExpenseSummary(expenses)
@@ -94,6 +95,7 @@ function focusForm() {
     <header class="app-header">
       <h1>Expense Tracker</h1>
     </header>
+    <AlertBanner :write-failed="writeFailed" :status="status" :dropped="dropped" />
     <main class="app-main">
       <section class="dashboard-section" aria-label="Dashboard">
         <DashboardSummary :summary="summary" />

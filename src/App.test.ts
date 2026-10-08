@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 
 import App from './App.vue'
@@ -315,5 +315,90 @@ describe('App', () => {
     expect(wrapper.findAll('.expense-item')).toHaveLength(1)
     expect(total()).toBe(formatCents(1234 + 2000))
     expect(wrapper.findAll('.dashboard-category')).toHaveLength(4)
+  })
+
+  it('hydrates from storage, rendering only valid records', async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        expenses: [
+          existing,
+          { id: 42, description: 'broken', amountCents: 100 },
+          { ...existing, id: 'id-2', description: 'Train ticket' },
+        ],
+      }),
+    )
+    const wrapper = mountApp()
+    await flushPromises()
+
+    const descriptions = wrapper.findAll('.expense-description').map((n) => n.text())
+    expect(descriptions).toEqual(['Lunch', 'Train ticket'])
+    expect(wrapper.find('.alert-banner').text()).toContain('1 entry skipped')
+  })
+
+  it('shows the unreadable-data banner and starts empty on corrupt storage', async () => {
+    localStorage.setItem(STORAGE_KEY, 'not json at all')
+    const wrapper = mountApp()
+    await flushPromises()
+
+    expect(wrapper.find('.alert-banner').text()).toContain('unreadable')
+    expect(wrapper.findAll('.expense-item')).toHaveLength(0)
+    expect(wrapper.find('.empty-state').exists()).toBe(true)
+  })
+
+  it('writes a StoredPayload on mutation and re-reads it on a fresh mount', async () => {
+    const first = mountApp()
+    await fillForm(first, 'Lunch', '12,34', '2026-10-01')
+    await first.find('form').trigger('submit')
+    await flushPromises()
+
+    const raw = localStorage.getItem(STORAGE_KEY)
+    expect(raw).not.toBeNull()
+    const parsed: unknown = JSON.parse(raw as string)
+    expect(parsed).toHaveProperty('version', 1)
+    const payload = parsed as { expenses: Expense[] }
+    expect(payload.expenses).toHaveLength(1)
+    expect(payload.expenses[0]).toMatchObject({
+      description: 'Lunch',
+      amountCents: 1234,
+      category: Category.Food,
+      date: '2026-10-01',
+    })
+
+    first.unmount()
+
+    const second = mountApp()
+    await flushPromises()
+
+    expect(second.findAll('.expense-item')).toHaveLength(1)
+    expect(second.find('.expense-description').text()).toBe('Lunch')
+    expect(second.find('.expense-amount').text()).toBe(formatCents(1234))
+  })
+
+  it('shows the write-failure banner and hides it after a successful retry', async () => {
+    const wrapper = mountApp()
+    await flushPromises()
+
+    const setItemSpy = vi.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError')
+    })
+
+    await fillForm(wrapper, 'Lunch', '12,34', '2026-10-01')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(setItemSpy).toHaveBeenCalled()
+    expect(wrapper.find('.alert-banner').attributes('role')).toBe('alert')
+    expect(wrapper.find('.alert-banner').text()).toContain('Could not save')
+
+    setItemSpy.mockRestore()
+
+    await fillForm(wrapper, 'Coffee', '5,00', '2026-10-02')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.find('.alert-banner').exists()).toBe(false)
+    expect(wrapper.findAll('.expense-item')).toHaveLength(2)
   })
 })
