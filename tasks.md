@@ -36,6 +36,7 @@ where validation lives, edge cases) and wait for OK before coding.
 - [x] 1.3 `utils/money.ts` — `parseAmountToCents(raw: string): number | null`, syntax only: trims, accepts `12`, `12,34`, `12.34`,
       `1.234,56`, optional leading `-`, max 2 decimals; builds cents from integer/fraction strings (never `parseFloat(...)*100`).
       Range rules (> 0, ≤ 100000000) move to 1.6.
+      An optional leading `€` (the form's own edit-prefill format) is stripped before parsing.
       Done when: tests — valid: `'12'→1200`, `'12,34'→1234`, `'12.34'→1234`, `'1.234,56'→123456`, `' 12,34 '→1234`, `'0.29'→29`,
       `'19.99'→1999`, `'1000000'→100000000`, `'-5'→-500`, `'0'→0`; null: `''`, `'abc'`, `'12.'`, `'1.234'`, `'1,234.56'`, 3 decimals.
 - [x] 1.4 `utils/money.ts` — `formatCents(cents: number): string` with a module-level `Intl.NumberFormat` instance (nl-NL EUR;
@@ -54,7 +55,7 @@ where validation lives, edge cases) and wait for OK before coding.
       `ValidationResult` shape asserted.
 - [x] 1.7 `utils/sorting.ts` — `compareExpenses` + `sortExpenses` (returns a new array via `[...list].sort`).
       Done when: tests for date/amount × asc/desc (4 cases); dates compared as strings; input array unchanged;
-      tie-break = `createdAt` in the same direction as the primary sort, then `id`.
+      tie-break = `createdAt` in the same direction as the primary sort, then `id` asc.
 - [x] 1.8 `utils/storage.ts` — `parseStoredPayload(raw: string | null): { expenses: Expense[]; status: 'ok' | 'empty' | 'corrupt'; dropped: number }`
       (pure, no localStorage, no console calls); `const data: unknown = JSON.parse(raw)` inside try/catch;
       narrow with type guards (`isExpense`, `isCategory`), no `as` casts.
@@ -93,27 +94,28 @@ where validation lives, edge cases) and wait for OK before coding.
       Done when: tests assert the ARIA attributes, ESC emits cancel, backdrop click emits cancel.
 - [x] 3.4b Dialog focus: focus trap, initial focus on Cancel, focus restored to trigger.
       Done when: tests: initial focus lands on Cancel, Tab cycles only inside the dialog, focus returns to the trigger after close.
-- [ ] 3.5a Wire create/edit in App.vue: edit prefills, save sets updatedAt (id/createdAt stable), cancel = no change;
+- [x] 3.5a Wire create/edit in App.vue: edit prefills, save sets updatedAt (id/createdAt stable), cancel = no change;
       form resets after a successful add and leaves edit mode after a save.
       Done when: tests: add → row appears + form reset; edit → prefilled, updatedAt changes, id/createdAt stable;
       save → leaves edit mode; cancel → list untouched.
-- [ ] 3.5b Delete wired only via confirm dialog.
+- [x] 3.5b Delete wired only via confirm dialog.
       Done when: test: delete → row gone only after confirm; cancel/dismiss → list untouched.
-- [ ] 3.6 **Phase 3 test task** — full gates, paste output, wait for OK.
+- [x] 3.6 **Phase 3 test task** — full gates, paste output, wait for OK.
       Manual browser check in `npm run dev`: add 5 expenses, edit one, delete one, refresh → list unchanged.
       Reflect: any new pattern or decision → update AGENTS.md.
 
 ## Phase 4 — Filtering & sorting
-- [ ] 4.1 `useExpenseFilters`: `category: 'all'|Category`, `sortField: 'date'`, `sortOrder: 'desc'`; `visible(all)` = filter → sort.
+- [x] 4.1 `useExpenseFilters`: `category: 'all'|Category`, `sortField: 'date'`, `sortOrder: 'desc'`; `visible(all)` = filter → sort.
       Done when: pipeline tests incl. tie-breaker + date-desc default, plus a test with 1000 expenses asserting filter → sort is correct.
-- [ ] 4.2 `CategoryFilter.vue`: "All categories" + 4 options, disabled when list empty, emits selection.
+- [x] 4.2 `CategoryFilter.vue`: "All categories" + 4 options, disabled when list empty, emits selection.
       Done when: tests: emits value, `disabled` when no expenses, enabled when there are.
-- [ ] 4.3 `SortControls.vue`: date/amount × asc/desc, disabled when list empty.
+- [x] 4.3 `SortControls.vue`: date/amount × asc/desc, disabled when list empty.
       Done when: tests: emits field/order changes + disabled state.
-- [ ] 4.4 Wire into App; "Clear filters" action when the filter hides everything; empty ≠ no-results copy.
+- [x] 4.4 Wire into App; "Clear filters" action when the filter hides everything; empty ≠ no-results copy.
       Done when: tests: filtered-to-zero shows no-results + clear button; zero expenses shows empty state instead;
       saving an item hidden by the active filter pushes a toast saying so.
-- [ ] 4.5 **Phase 4 test task** — full gates, paste output, wait for OK.
+      (Empty/no-results copy is inline in App.vue for now; extract to `EmptyState.vue` with a mode prop in 7.1.)
+- [x] 4.5 **Phase 4 test task** — full gates, paste output, wait for OK.
       Manual browser check in `npm run dev` (walk filtering and sorting by hand).
       Reflect: any new pattern or decision → update AGENTS.md.
 
@@ -142,6 +144,7 @@ where validation lives, edge cases) and wait for OK before coding.
 
 ## Phase 7 — Polish
 - [ ] 7.1 Empty vs no-results states (`EmptyState.vue`, mode prop): add-CTA vs clear-filters.
+      (Copy already lives inline in App.vue from 4.4 — extract it into the component here.)
       Done when: tests assert the right copy and button per mode.
 - [ ] 7.2 `ToastStack.vue`: one `aria-live="polite"` region, max 3, 4 s auto-dismiss, close button; wired to `useToasts`.
       Done when: tests: region attributes, 4th toast rejected, auto-removal with fake timers, close removes.

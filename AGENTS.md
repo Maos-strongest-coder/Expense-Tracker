@@ -23,8 +23,9 @@ State stores integer cents only.
 - Composables, one job each: `useLocalStorage`, `useExpenses`, `useExpenseFilters`, `useExpenseSummary`, `useExpenseForm`, `useConfirmDialog`, `useToasts`.
 - `useExpenses()` is called once in `App.vue`; other composables receive its list as an argument (single source of truth).
 - Pure logic in `src/utils/` (validation, cents parsing/formatting, sorting, date checks, stored-payload parsing) — no DOM, no storage, unit tested.
-- Components get data via props and emit events. Containers: `App.vue` and `ExpenseForm.vue`; all others presentational.
-- Tests co-located as `src/**/*.test.ts` (vitest + happy-dom env in `vite.config.ts`); component names must be multi-word (`vue/essential`).
+- Components get data via props and emit events. Containers: `App.vue` and `ExpenseForm.vue`; all others presentational. `CategoryFilter.vue` uses `v-model` (`modelValue`/`update:modelValue`), `SortControls.vue` uses `field`/`order` props with `update:field`/`update:order`.
+- Composable refs must be bound at top level in templates (destructured in `App.vue`): refs nested inside a plain object are not unwrapped in templates, so `v-model="filters.category"` would silently desync — use `v-model="category"` instead.
+- Tests co-located as `src/**/*.test.ts` (vitest + happy-dom env in `vite.config.ts`); component names must be multi-word (`vue/essential`). Mount with explicit generics (`mount<typeof Comp, typeof Comp>(...)`) so emits/props typing infers.
 - Only `useLocalStorage` touches localStorage. No Pinia, no UI libraries, no new deps without asking.
 
 ## Validation
@@ -37,10 +38,11 @@ Key `expense-tracker:v1`, shape `StoredPayload`. Missing key → empty. Parse/sh
 Write fails (quota/private mode) → in-memory state wins, persistent `role="alert"` banner, retry on every mutation, hide banner once a write succeeds.
 
 ## Behavior rules
-Filter first, then sort (default date desc); tie-breaker: equal keys → `createdAt` asc. Dashboard ignores filter/sort.
+Filter first, then sort (default date desc); tie-breaker: equal keys → `createdAt` in the same direction as the primary sort, then `id` asc. Dashboard ignores filter/sort.
 Mutations update the in-memory list first (optimistic), then persist — storage is synchronous, so there is no loading state. The visible list is a `computed` (filter → sort) keyed by `expense.id`, no watchers for derived data; it must stay fast with ~1000 expenses.
 Empty state ("no expenses yet" + CTA) ≠ no-results ("clear filters"). Edit prefills; save updates `updatedAt`, keeps id/createdAt; cancel = no change.
 After a successful add the form resets; after a save it leaves edit mode. If a saved item is hidden by the active filter, a toast says so. Delete only via confirm dialog (ESC/backdrop/Cancel abort).
+Reset/prefill/cancel are implemented by force-remounting `ExpenseForm` in `App.vue` via `:key` (`edit-${id}` vs `create-${formVersion}`) — don't mutate form state from the outside instead.
 Save stays enabled in create mode (so submit can show all errors and focus the first invalid field); in edit mode it is disabled while the form is not dirty. Format `Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'})` on `amountCents/100`; total 0 → `€ 0,00`, never NaN/empty.
 
 ## UX & accessibility

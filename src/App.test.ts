@@ -134,4 +134,163 @@ describe('App', () => {
     expect((wrapper.find('#expense-description').element as HTMLInputElement).value).toBe('')
     expect(storedExpenses()).toEqual([existing])
   })
+
+  function dialogButtons(): HTMLButtonElement[] {
+    const dialog = document.querySelector('.dialog')
+    if (dialog === null) throw new Error('expected the confirm dialog to be open')
+    return Array.from(dialog.querySelectorAll('button'))
+  }
+
+  it('deletes the expense only after confirming in the dialog', async () => {
+    seed([existing])
+    const wrapper = mountApp()
+    await flushPromises()
+
+    await wrapper.findAll('.expense-item button')[1].trigger('click')
+    await flushPromises()
+
+    expect(wrapper.findAll('.expense-item')).toHaveLength(1)
+    expect(dialogButtons()).toHaveLength(2)
+
+    dialogButtons()[1].click()
+    await flushPromises()
+
+    expect(wrapper.findAll('.expense-item')).toHaveLength(0)
+    expect(storedExpenses()).toEqual([])
+    expect(wrapper.find('.toast').text()).toContain('Expense deleted')
+  })
+
+  it('leaves the list untouched when the delete dialog is dismissed', async () => {
+    seed([existing])
+    const wrapper = mountApp()
+    await flushPromises()
+
+    await wrapper.findAll('.expense-item button')[1].trigger('click')
+    await flushPromises()
+
+    dialogButtons()[0].click()
+    await flushPromises()
+
+    expect(document.querySelector('.dialog')).toBeNull()
+    expect(wrapper.findAll('.expense-item')).toHaveLength(1)
+    expect(storedExpenses()).toEqual([existing])
+  })
+
+  it('shows the empty state (not no-results) when there are no expenses', async () => {
+    const wrapper = mountApp()
+    await flushPromises()
+
+    expect(wrapper.find('.empty-state').text()).toContain('No expenses yet')
+    expect(wrapper.find('.empty-state button').text()).toBe('Add your first expense')
+    expect(wrapper.find('.no-results').exists()).toBe(false)
+  })
+
+  it('focuses the form from the empty-state CTA', async () => {
+    const wrapper = mountApp()
+    await flushPromises()
+
+    await wrapper.find('.empty-state button').trigger('click')
+
+    expect(document.activeElement?.id).toBe('expense-description')
+  })
+
+  it('disables the filter and sort controls while the list is empty', async () => {
+    const wrapper = mountApp()
+    await flushPromises()
+
+    expect(wrapper.find('#category-filter').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('#sort-field').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('#sort-order').attributes('disabled')).toBeDefined()
+
+    await fillForm(wrapper, 'Lunch', '12,34', '2026-10-01')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.find('#category-filter').attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('#sort-field').attributes('disabled')).toBeUndefined()
+  })
+
+  it('shows no-results with a clear-filters action when filters hide everything', async () => {
+    seed([existing])
+    const wrapper = mountApp()
+    await flushPromises()
+
+    await wrapper.find('#category-filter').setValue(Category.Transport)
+    await flushPromises()
+
+    expect(wrapper.findAll('.expense-item')).toHaveLength(0)
+    expect(wrapper.find('.no-results').text()).toContain('No expenses match your filters')
+    expect(wrapper.find('.empty-state').exists()).toBe(false)
+
+    await wrapper.find('.no-results button').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.no-results').exists()).toBe(false)
+    expect(wrapper.findAll('.expense-item')).toHaveLength(1)
+    expect((wrapper.find('#category-filter').element as HTMLSelectElement).value).toBe('all')
+  })
+
+  it('pushes a toast when a saved expense is hidden by the active filter', async () => {
+    seed([existing])
+    const wrapper = mountApp()
+    await flushPromises()
+
+    await wrapper.find('#category-filter').setValue(Category.Transport)
+    await fillForm(wrapper, 'Coffee', '5,00', '2026-10-02')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.findAll('.expense-item')).toHaveLength(0)
+    expect(storedExpenses()).toHaveLength(2)
+    expect(wrapper.find('.toast').text()).toContain('hidden by the current filter')
+  })
+
+  it('does not push the hidden-filter toast for a visible save', async () => {
+    const wrapper = mountApp()
+    await flushPromises()
+
+    await fillForm(wrapper, 'Lunch', '12,34', '2026-10-01')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.find('.toast').exists()).toBe(false)
+  })
+
+  it('sorts the list via the sort controls', async () => {
+    const cheap: Expense = {
+      ...existing,
+      id: 'id-2',
+      description: 'Train ticket',
+      amountCents: 500,
+      date: '2026-09-30',
+    }
+    seed([existing, cheap])
+    const wrapper = mountApp()
+    await flushPromises()
+
+    const descriptions = () => wrapper.findAll('.expense-description').map((n) => n.text())
+    expect(descriptions()).toEqual(['Lunch', 'Train ticket'])
+
+    await wrapper.find('#sort-order').setValue('asc')
+    await flushPromises()
+
+    expect(descriptions()).toEqual(['Train ticket', 'Lunch'])
+  })
+
+  it('filters the list via the category filter', async () => {
+    const other: Expense = {
+      ...existing,
+      id: 'id-2',
+      description: 'Cinema',
+      category: Category.Entertainment,
+    }
+    seed([existing, other])
+    const wrapper = mountApp()
+    await flushPromises()
+
+    await wrapper.find('#category-filter').setValue(Category.Entertainment)
+    await flushPromises()
+
+    expect(wrapper.findAll('.expense-description').map((n) => n.text())).toEqual(['Cinema'])
+  })
 })

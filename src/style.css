@@ -64,19 +64,71 @@ button:hover {
 
 button:focus-visible,
 input:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+select:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
 input,
-textarea {
+textarea,
+select {
   font: inherit;
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 8px 12px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: end;
+}
+
+.category-filter,
+.sort-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sort-controls {
+  display: flex;
+  gap: 16px;
+}
+
+.category-filter label,
+.sort-control label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+select:disabled {
+  cursor: not-allowed;
+  color: var(--text-muted);
+  background: var(--bg);
+}
+
+.empty-state,
+.no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+.empty-state p,
+.no-results p {
+  margin: 0;
+  color: var(--text-muted);
 }
 
 input[aria-invalid='true'] {

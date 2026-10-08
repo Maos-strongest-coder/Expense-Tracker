@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
+import CategoryFilter from './components/CategoryFilter.vue'
 import ExpenseForm from './components/ExpenseForm.vue'
 import ExpenseList from './components/ExpenseList.vue'
 import ConfirmDialog from './components/ConfirmDialog.vue'
+import SortControls from './components/SortControls.vue'
+import { useExpenseFilters } from './composables/useExpenseFilters'
 import { useExpenses } from './composables/useExpenses'
 import { useLocalStorage } from './composables/useLocalStorage'
 import { useToasts } from './composables/useToasts'
@@ -11,6 +14,9 @@ import type { Expense, ExpenseInput } from './types'
 
 const { expenses, save } = useLocalStorage()
 const { create, update, remove } = useExpenses(expenses, save)
+const { category, sortField, sortOrder, visible, clear } = useExpenseFilters()
+
+const visibleExpenses = computed(() => visible(expenses.value))
 
 const editing = ref<Expense | null>(null)
 const formVersion = ref(0)
@@ -31,6 +37,10 @@ const dialogOptions = ref<{
   cancelLabel: 'Cancel',
 })
 
+function isHiddenByFilter(savedCategory: ExpenseInput['category']): boolean {
+  return category.value !== 'all' && category.value !== savedCategory
+}
+
 function onSave(value: ExpenseInput) {
   if (editing.value) {
     update(editing.value.id, value)
@@ -39,6 +49,9 @@ function onSave(value: ExpenseInput) {
     create(value)
   }
   formVersion.value += 1
+  if (isHiddenByFilter(value.category)) {
+    pushToast('Saved, but hidden by the current filter.')
+  }
 }
 
 function onCancel() {
@@ -63,6 +76,14 @@ async function onDelete(id: string) {
     pushToast('Expense deleted')
   }
 }
+
+function clearFilters() {
+  clear()
+}
+
+function focusForm() {
+  document.querySelector<HTMLInputElement>('#expense-description')?.focus()
+}
 </script>
 
 <template>
@@ -72,6 +93,16 @@ async function onDelete(id: string) {
     </header>
     <main class="app-main">
       <section class="dashboard-section" aria-label="Dashboard"></section>
+      <section class="toolbar" aria-label="Filter and sort expenses">
+        <CategoryFilter v-model="category" :disabled="expenses.length === 0" />
+        <SortControls
+          :field="sortField"
+          :order="sortOrder"
+          :disabled="expenses.length === 0"
+          @update:field="sortField = $event"
+          @update:order="sortOrder = $event"
+        />
+      </section>
       <section class="form-section" aria-label="Expense form">
         <ExpenseForm
           :key="editing ? `edit-${editing.id}` : `create-${formVersion}`"
@@ -81,7 +112,15 @@ async function onDelete(id: string) {
         />
       </section>
       <section class="list-section" aria-label="Expenses">
-        <ExpenseList :expenses="expenses" @edit="onEdit" @delete="onDelete" />
+        <div v-if="expenses.length === 0" class="empty-state">
+          <p>No expenses yet.</p>
+          <button type="button" @click="focusForm">Add your first expense</button>
+        </div>
+        <div v-else-if="visibleExpenses.length === 0" class="no-results">
+          <p>No expenses match your filters.</p>
+          <button type="button" @click="clearFilters">Clear filters</button>
+        </div>
+        <ExpenseList v-else :expenses="visibleExpenses" @edit="onEdit" @delete="onDelete" />
       </section>
     </main>
 
